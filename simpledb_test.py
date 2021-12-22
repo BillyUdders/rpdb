@@ -24,8 +24,10 @@ class MyTestCase(unittest.TestCase):
         with db.transaction() as tx:
             db.set("a", 49)
             db.unset("b")
+            # self.assertEqual(db.get("a"), 49)
+            # self.assertFalse(db.exists("b"))
 
-            # We're in a a transaction
+            # We're in a transaction
             self.assertEqual(len(db.live_transactions), 1)
             # BEGIN, SET, UNSET
             self.assertEqual(len(db.live_transactions[-1].operations), 3)
@@ -35,7 +37,7 @@ class MyTestCase(unittest.TestCase):
                 self.assertEqual(len(db.live_transactions), 2)
                 tx2.rollback()
 
-            # Nested transaction closed
+            # Nested transaction committed
             self.assertEqual(len(db.live_transactions), 1)
             tx.rollback()
 
