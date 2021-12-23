@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "python-db"
 version = "0.1.0"
-description = ""
-authors = ["Rhysyrhysrhys <rhys@golden.co>"]
+description = "Transactions KV store written in Python to learn things"
+authors = ["Rhys Davies <rhys.davies901@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
