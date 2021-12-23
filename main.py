@@ -1,5 +1,5 @@
-from enum import Enum, auto
 import contextlib
+from enum import Enum, auto
 from typing import NamedTuple
 
 
@@ -9,6 +9,7 @@ class OperationType(Enum):
     UNSET = auto()
     GET = auto()
     COMMIT = auto()
+    TEST = auto()
 
 
 class Operation(NamedTuple):
@@ -34,7 +35,10 @@ class Transaction:
         self._rolled_back = True
 
     def __repr__(self) -> str:
-        return f"Transaction(_rolled_back={self._rolled_back}, operations={self.operations})"
+        return (
+            f"Transaction(_rolled_back={self._rolled_back},"
+            f" operations={self.operations})"
+        )
 
 
 class SimpleDB:
