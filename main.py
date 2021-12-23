@@ -17,10 +17,37 @@ class Operation(NamedTuple):
     value: object
 
 
+class State(dict):
+    def __init__(self, state=None) -> None:
+        super().__init__()
+        if state is None:
+            state = {}
+        self.__state = state
+
+    @property
+    def state(self) -> dict:
+        return self.__state
+
+    def commit(self, tx: "Transaction"):
+        try:
+            if tx.is_rolled_back:
+                return
+            for op in tx.operations:
+                if op.operation_type == OperationType.SET:
+                    self.__state[op.key] = op.value
+                elif op.operation_type == OperationType.UNSET:
+                    del self.__state[op.key]
+        except Exception as e:
+            print(e)
+        finally:
+            tx.do(OperationType.COMMIT)
+
+
 class Transaction:
     def __init__(self):
         self._rolled_back: bool = False
         self.operations: list[Operation] = []
+        self.temp_state: State = State()
         self.do(OperationType.BEGIN)
 
     def do(self, op: OperationType, key=None, value=None):
@@ -42,7 +69,7 @@ class Transaction:
 
 class SimpleDB:
     def __init__(self):
-        self.state: dict = {}
+        self.__state: State = State()
         self.live_txs: list[Transaction] = []
         self.tx_log: list[Transaction] = []
 
@@ -51,39 +78,25 @@ class SimpleDB:
         tx = Transaction()
         self.live_txs.append(tx)
         yield tx
-        self.__commit(tx)
+        self.__state.commit(tx)
+        self.tx_log.append(tx)
         self.live_txs.remove(tx)
 
     def set(self, key, value):
-        self.__transact(OperationType.SET, key, value)
+        self._do_on_current_tx(OperationType.SET, key, value)
 
     def unset(self, key):
-        self.__transact(OperationType.UNSET, key)
+        self._do_on_current_tx(OperationType.UNSET, key)
 
     def get(self, key):
-        return self.state[key]
+        return self.__state.state[key]
 
     def exists(self, key):
-        return key in self.state
+        return key in self.__state.state
 
-    def __transact(self, operation, key, value=None):
+    def _do_on_current_tx(self, operation, key, value=None):
         if self.live_txs:
             self.live_txs[-1].do(operation, key, value)
         else:
             with self.transaction() as tx:
                 tx.do(operation, key, value)
-
-    def __commit(self, tx: Transaction):
-        try:
-            if tx.is_rolled_back:
-                return
-            for op in tx.operations:
-                if op.operation_type == OperationType.SET:
-                    self.state[op.key] = op.value
-                elif op.operation_type == OperationType.UNSET:
-                    del self.state[op.key]
-        except Exception as e:
-            print(e)
-        finally:
-            self.tx_log.append(tx)
-            tx.do(OperationType.COMMIT)
