@@ -1,5 +1,6 @@
 import unittest
-from main import SimpleDB, Operation, OperationType
+
+from main import Operation, OperationType, SimpleDB
 
 
 class MyTestCase(unittest.TestCase):
@@ -19,9 +20,9 @@ class MyTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        self.assertEqual(len(db.transaction_log), 1)
+        self.assertEqual(len(db.tx_log), 1)
 
-        operations = db.transaction_log[-1].operations
+        operations = db.tx_log[-1].operations
         self.assertEqual(len(operations), 3)
         self.assertEqual(
             operations,
@@ -39,8 +40,8 @@ class MyTestCase(unittest.TestCase):
             db.set("a", 12)
             db.set("b", 23)
             db.unset("b")
-            self.assertEqual(len(db.live_transactions), 1)
-            operation_captor = db.live_transactions[-1].operations
+            self.assertEqual(len(db.live_txs), 1)
+            operation_captor = db.live_txs[-1].operations
 
         self.assertEqual(
             operation_captor,
@@ -52,15 +53,15 @@ class MyTestCase(unittest.TestCase):
                 Operation(OperationType.COMMIT, None, None),
             ],
         )
-        self.assertEqual(len(db.live_transactions), 0)
+        self.assertEqual(len(db.live_txs), 0)
 
     def test_transaction_nesting(self):
         db = SimpleDB()
         with db.transaction():
             with db.transaction():
-                self.assertEqual(len(db.live_transactions), 2)
-            self.assertEqual(len(db.live_transactions), 1)
-        self.assertEqual(len(db.live_transactions), 0)
+                self.assertEqual(len(db.live_txs), 2)
+            self.assertEqual(len(db.live_txs), 1)
+        self.assertEqual(len(db.live_txs), 0)
 
     def test_tx_set_rollback(self):
         db = SimpleDB()

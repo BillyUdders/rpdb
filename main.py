@@ -43,16 +43,16 @@ class Transaction:
 class SimpleDB:
     def __init__(self):
         self.state: dict = {}
-        self.live_transactions: list[Transaction] = []
-        self.transaction_log: list[Transaction] = []
+        self.live_txs: list[Transaction] = []
+        self.tx_log: list[Transaction] = []
 
     @contextlib.contextmanager
     def transaction(self):
         tx = Transaction()
-        self.live_transactions.append(tx)
+        self.live_txs.append(tx)
         yield tx
         self.__commit(tx)
-        self.live_transactions.remove(tx)
+        self.live_txs.remove(tx)
 
     def set(self, key, value):
         self.__transact(OperationType.SET, key, value)
@@ -67,8 +67,8 @@ class SimpleDB:
         return key in self.state
 
     def __transact(self, operation, key, value=None):
-        if self.live_transactions:
-            self.live_transactions[-1].do(operation, key, value)
+        if self.live_txs:
+            self.live_txs[-1].do(operation, key, value)
         else:
             with self.transaction() as tx:
                 tx.do(operation, key, value)
@@ -85,5 +85,5 @@ class SimpleDB:
         except Exception as e:
             print(e)
         finally:
-            self.transaction_log.append(tx)
+            self.tx_log.append(tx)
             tx.do(OperationType.COMMIT)

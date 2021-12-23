@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "python-db"
 version = "0.1.0"
-description = "Transactions KV store written in Python to learn things"
+description = "Transactional KV store written in Python to learn things"
 authors = ["Rhys Davies <rhys.davies901@gmail.com>"]
 
 [tool.poetry.dependencies]
