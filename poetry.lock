@@ -26,7 +26,7 @@ platformdirs = ">=2"
 tomli = ">=0.2.6,<2.0.0"
 typing-extensions = [
     {version = ">=3.10.0.0", markers = "python_version < \"3.10\""},
-    {version = "!=3.10.0.1", markers = "python_version >= \"3.10\""},
+    {version = ">=3.10.0.0,<3.10.0.1 || >3.10.0.1", markers = "python_version >= \"3.10\""},
 ]
 
 [package.extras]
@@ -259,7 +259,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "13017c561415320e4dade7711a43cd76a13a809f4509018d25a24adf8500e6d1"
+content-hash = "5b80bcf39bc22fc51a0c05260792ccc8bde494467670046c58c64725c897eb75"
 
 [metadata.files]
 "backports.entry-points-selectable" = [
