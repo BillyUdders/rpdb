@@ -9,7 +9,6 @@ class OperationType(Enum):
     UNSET = auto()
     GET = auto()
     COMMIT = auto()
-    TEST = auto()
 
 
 class Operation(NamedTuple):
@@ -36,8 +35,8 @@ class Transaction:
 
     def __repr__(self) -> str:
         return (
-            f"Transaction(_rolled_back={self._rolled_back},"
-            f" operations={self.operations})"
+            f"Transaction(_rolled_back={self._rolled_back}, "
+            f"operations={self.operations})"
         )
 
 
@@ -69,8 +68,7 @@ class SimpleDB:
 
     def __transact(self, operation, key, value=None):
         if self.live_transactions:
-            tx = self.live_transactions[-1]
-            tx.do(operation, key, value)
+            self.live_transactions[-1].do(operation, key, value)
         else:
             with self.transaction() as tx:
                 tx.do(operation, key, value)
