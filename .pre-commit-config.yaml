@@ -19,6 +19,6 @@ repos:
       - id: isort
         name: isort (python)
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: ''
+    rev: 'v0.930'
     hooks:
         -   id: mypy
