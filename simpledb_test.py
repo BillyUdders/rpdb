@@ -14,7 +14,25 @@ class MyTestCase(unittest.TestCase):
         self.assertRaises(KeyError, db.get, "a")
         self.assertFalse(db.exists("a"))
 
-    def test_transaction_log(self):
+    def test_auto_commit_operations(self):
+        db = SimpleDB()
+
+        db.set("a", 12)
+
+        self.assertEqual(len(db.transaction_log), 1)
+
+        operations = db.transaction_log[-1].operations
+        self.assertEqual(len(operations), 3)
+        self.assertEqual(
+            operations,
+            [
+                Operation(OperationType.BEGIN, None, None),
+                Operation(OperationType.SET, "a", 12),
+                Operation(OperationType.COMMIT, None, None),
+            ],
+        )
+
+    def test_tx_transaction_log(self):
         db = SimpleDB()
 
         with db.transaction():

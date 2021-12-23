@@ -20,7 +20,8 @@ class Operation(NamedTuple):
 class Transaction:
     def __init__(self):
         self._rolled_back: bool = False
-        self.operations: list[Operation] = [Operation(OperationType.BEGIN, None, None)]
+        self.operations: list[Operation] = []
+        self.do(OperationType.BEGIN)
 
     def do(self, op: OperationType, key=None, value=None):
         self.operations.append(Operation(op, key, value))
