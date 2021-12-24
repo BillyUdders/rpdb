@@ -22,10 +22,9 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(len(db.tx_log), 1)
 
-        operations = db.tx_log[-1].operations
-        self.assertEqual(len(operations), 3)
+        self.assertEqual(len(db.tx_log[-1]), 3)
         self.assertEqual(
-            operations,
+            db.tx_log[-1],
             [
                 Operation(OperationType.BEGIN, None, None),
                 Operation(OperationType.SET, "a", 12),
@@ -41,7 +40,7 @@ class MyTestCase(unittest.TestCase):
             db.set("b", 23)
             db.unset("b")
             self.assertEqual(len(db.live_txs), 1)
-            operation_captor = db.live_txs[-1].operations
+            operation_captor = db.live_txs[-1]
 
         self.assertEqual(
             operation_captor,
