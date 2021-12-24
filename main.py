@@ -18,40 +18,31 @@ class Operation(NamedTuple):
 
 
 class State(dict):
-    def __init__(self, state=None) -> None:
-        super().__init__()
-        if state is None:
-            state = {}
-        self.__state = state
-
-    @property
-    def state(self) -> dict:
-        return self.__state
-
     def commit(self, tx: "Transaction"):
         try:
             if tx.is_rolled_back:
                 return
-            for op in tx.operations:
+            for op in tx:
                 if op.operation_type == OperationType.SET:
-                    self.__state[op.key] = op.value
+                    self[op.key] = op.value
                 elif op.operation_type == OperationType.UNSET:
-                    del self.__state[op.key]
+                    del self[op.key]
+                elif op.operation_type == OperationType.GET:
+                    return self[op.key]
         except Exception as e:
             print(e)
         finally:
             tx.do(OperationType.COMMIT)
 
 
-class Transaction:
+class Transaction(list):
     def __init__(self):
+        super().__init__()
         self._rolled_back: bool = False
-        self.operations: list[Operation] = []
-        self.temp_state: State = State()
         self.do(OperationType.BEGIN)
 
     def do(self, op: OperationType, key=None, value=None):
-        self.operations.append(Operation(op, key, value))
+        self.append(Operation(op, key, value))
 
     @property
     def is_rolled_back(self):
@@ -61,10 +52,7 @@ class Transaction:
         self._rolled_back = True
 
     def __repr__(self) -> str:
-        return (
-            f"Transaction(_rolled_back={self._rolled_back}, "
-            f"operations={self.operations})"
-        )
+        return f"Transaction(_rolled_back={self._rolled_back}, ops={self})"
 
 
 class SimpleDB:
@@ -83,18 +71,18 @@ class SimpleDB:
         self.live_txs.remove(tx)
 
     def set(self, key, value):
-        self._do_on_current_tx(OperationType.SET, key, value)
+        self.__exec(OperationType.SET, key, value)
 
     def unset(self, key):
-        self._do_on_current_tx(OperationType.UNSET, key)
+        self.__exec(OperationType.UNSET, key)
 
     def get(self, key):
-        return self.__state.state[key]
+        return self.__state[key]
 
     def exists(self, key):
-        return key in self.__state.state
+        return key in self.__state
 
-    def _do_on_current_tx(self, operation, key, value=None):
+    def __exec(self, operation, key, value=None):
         if self.live_txs:
             self.live_txs[-1].do(operation, key, value)
         else:
