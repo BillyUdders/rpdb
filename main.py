@@ -8,6 +8,7 @@ class OperationType(Enum):
     SET = auto()
     UNSET = auto()
     GET = auto()
+    EXISTS = auto()
     ROLLBACK = auto()
     COMMIT = auto()
 
@@ -26,6 +27,7 @@ class State(dict):
             OperationType.BEGIN: self.__begin,
             OperationType.SET: self.__set,
             OperationType.UNSET: self.__unset,
+            OperationType.EXISTS: self.__exists,
             OperationType.ROLLBACK: self.__rollback,
             OperationType.COMMIT: self.__commit,
         }
@@ -35,7 +37,7 @@ class State(dict):
     def operate(self, tx: "Transaction"):
         try:
             for op in tx:
-                self.OPERATIONS[op.operation_type](op)
+                return self.OPERATIONS[op.operation_type](op)
         except Exception as e:
             print(e)
 
@@ -46,6 +48,9 @@ class State(dict):
         pass
 
     def __unset(self):
+        pass
+
+    def __exists(self):
         pass
 
     def __rollback(self):
@@ -92,10 +97,10 @@ class SimpleDB:
         self.__exec(OperationType.UNSET, key)
 
     def get(self, key):
-        return self.__state[key]
+        return self.__exec(OperationType.GET, key)
 
     def exists(self, key):
-        return key in self.__state
+        return self.__exec(OperationType.EXISTS, key)
 
     def __exec(self, operation, key, value=None):
         if self.live_txs:
