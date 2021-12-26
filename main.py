@@ -1,6 +1,6 @@
 import contextlib
 from enum import Enum, auto
-from typing import Any, Dict, List, NamedTuple
+from typing import Callable, Dict, List, NamedTuple
 
 
 class OperationType(Enum):
@@ -19,17 +19,17 @@ class Operation(NamedTuple):
 
 
 class State(dict):
-    # Replace Any with Callable when we implement
-    OPERATIONS: Dict[OperationType, Any] = {
-        OperationType.BEGIN: None,
-        OperationType.SET: None,
-        OperationType.UNSET: None,
-        OperationType.ROLLBACK: None,
-        OperationType.COMMIT: None,
-    }
-
     def __init__(self) -> None:
         super().__init__()
+
+        self.OPERATIONS: Dict[OperationType, Callable] = {
+            OperationType.BEGIN: self.__begin,
+            OperationType.SET: self.__set,
+            OperationType.UNSET: self.__unset,
+            OperationType.ROLLBACK: self.__rollback,
+            OperationType.COMMIT: self.__commit,
+        }
+
         self.wal: List[Transaction] = []
 
     def operate(self, tx: "Transaction"):
@@ -38,6 +38,21 @@ class State(dict):
                 self.OPERATIONS[op.operation_type](op)
         except Exception as e:
             print(e)
+
+    def __begin(self):
+        pass
+
+    def __set(self):
+        pass
+
+    def __unset(self):
+        pass
+
+    def __rollback(self):
+        pass
+
+    def __commit(self):
+        pass
 
 
 class Transaction(list):
