@@ -20,11 +20,12 @@ class MyTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        self.assertEqual(len(db.tx_log), 1)
+        self.assertEqual(len(db.state.tx_log), 1)
 
-        self.assertEqual(len(db.tx_log[-1]), 3)
+        most_recent_tx = db.state.tx_log[-1]
+        self.assertEqual(len(most_recent_tx), 3)
         self.assertEqual(
-            db.tx_log[-1],
+            most_recent_tx,
             [
                 Operation(OperationType.BEGIN, None, None),
                 Operation(OperationType.SET, "a", 12),
