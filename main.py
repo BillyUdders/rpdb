@@ -1,6 +1,7 @@
 import contextlib
+import uuid
 from enum import Enum, auto
-from typing import Callable, Dict, List, NamedTuple
+from typing import Any, Callable, Dict, NamedTuple, NewType, Optional
 
 
 class OperationType(Enum):
@@ -19,6 +20,22 @@ class Operation(NamedTuple):
     value: object
 
 
+TransactionID = NewType("TransactionID", uuid.UUID)
+
+
+class Transaction(list):
+    def __init__(self):
+        super().__init__()
+        self.id = TransactionID(uuid.uuid4())
+        self.do(OperationType.BEGIN)
+
+    def do(self, op_type: OperationType, key=None, value=None):
+        self.append(Operation(op_type, key, value))
+
+    def __repr__(self) -> str:
+        return f"Transaction(ops={self}, id={self.id})"
+
+
 class State(dict):
     def __init__(self) -> None:
         super().__init__()
@@ -32,44 +49,35 @@ class State(dict):
             OperationType.COMMIT: self.__commit,
         }
 
-        self.wal: List[Transaction] = []
+        self.wal: Dict[TransactionID, Operation] = {}
 
-    def operate(self, tx: "Transaction"):
+    def operate(self, tx: Transaction) -> Optional[Any]:
         try:
             for op in tx:
-                return self.OPERATIONS[op.operation_type](op)
+                self.OPERATIONS[op.operation_type](tx.id, op)
+
+            return {"FIXME"}
         except Exception as e:
             print(e)
+            return None
 
-    def __begin(self):
+    def __begin(self, tx_id: TransactionID, op: Operation) -> None:
+        self.wal[tx_id] = op
+
+    def __set(self, tx_id: TransactionID, op: Operation) -> None:
         pass
 
-    def __set(self):
+    def __unset(self, tx_id: TransactionID, op: Operation) -> None:
         pass
 
-    def __unset(self):
+    def __exists(self, tx_id: TransactionID, op: Operation) -> None:
         pass
 
-    def __exists(self):
+    def __rollback(self, tx_id: TransactionID, op: Operation) -> None:
         pass
 
-    def __rollback(self):
+    def __commit(self, tx_id: TransactionID, op: Operation) -> None:
         pass
-
-    def __commit(self):
-        pass
-
-
-class Transaction(list):
-    def __init__(self):
-        super().__init__()
-        self.do(OperationType.BEGIN)
-
-    def do(self, op_type: OperationType, key=None, value=None):
-        self.append(Operation(op_type, key, value))
-
-    def __repr__(self) -> str:
-        return f"Transaction(ops={self})"
 
 
 class SimpleDB:
