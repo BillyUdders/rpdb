@@ -26,7 +26,7 @@ TransactionID = NewType("TransactionID", uuid.UUID)
 class Transaction(list):
     def __init__(self):
         super().__init__()
-        self.id = TransactionID(uuid.uuid4())
+        self.id: TransactionID = TransactionID(uuid.uuid4())
         self.do(OperationType.BEGIN)
 
     def do(self, op_type: OperationType, key=None, value=None):
