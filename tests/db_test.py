@@ -22,7 +22,7 @@ class DBTestCase(unittest.TestCase):
         db.set("a", 12)
 
         wal = db.state.wal.restore_all()
-        self.assertEqual(len(wal), 1)
+        self.assertEqual(len(list(wal)), 1)
         self.assertEqual(
             wal,
             [

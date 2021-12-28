@@ -1,7 +1,7 @@
 import json
 import time
 from struct import pack, unpack
-from typing import Generator, Iterator, Tuple
+from typing import Iterator, Tuple
 
 from rpdb.operations import Operation
 
@@ -23,7 +23,7 @@ class WAL:
         self.writer.write(value_bytes)
         self.writer.flush()
 
-    def restore_all(self) -> Generator[Tuple[str, str], None, None]:
+    def restore_all(self) -> Iterator[Tuple[str, str]]:
         self.writer.seek(0)
         yield from self._read_pairs()
 
