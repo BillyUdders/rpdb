@@ -20,5 +20,5 @@ OpType = Union[ReaderOps, WriterOps]
 
 class Operation(NamedTuple):
     op_type: OpType
-    key: object
+    key: str
     value: Optional[object]
