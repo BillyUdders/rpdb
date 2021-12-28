@@ -3,14 +3,14 @@ from typing import Any, Callable, Dict, Optional
 
 from sortedcontainers import SortedDict
 
-from rpdb.operations import Operation, OperationType, ReaderOps, WriterOps
+from rpdb.operations import Operation, OpType, ReaderOps, WriterOps
 from rpdb.transaction import Transaction
 from rpdb.wal import WAL
 
 
 class State:
     def __init__(self) -> None:
-        self.OPERATIONS: Dict[OperationType, Callable] = {
+        self.OPERATIONS: Dict[OpType, Callable] = {
             WriterOps.BEGIN: self.__begin,
             WriterOps.SET: self.__set,
             WriterOps.UNSET: self.__unset,
@@ -20,17 +20,17 @@ class State:
             ReaderOps.GET: self.__get,
         }
 
-        self._memtable = SortedDict()
-        self._sstables = SortedDict(key=lambda x: str(x.path))
-        self.wal: WAL = WAL()
+        self._memtable: SortedDict = SortedDict()
+        self._sstables: SortedDict = SortedDict(key=lambda x: str(x.path))
+        self.wal: WAL = WAL("/tmp/wal.dat")
 
     def operate(self, tx: Transaction) -> Optional[Any]:
         for op in tx:
-            self.OPERATIONS[op.operation_type](tx.id, op)
+            self.OPERATIONS[op.op_type](tx.id, op)
         return {"FIXME"}
 
-    def __begin(self, tx: Transaction, op: Operation) -> None:
-        pass
+    def __begin(self, op: Operation) -> None:
+        self.wal.append(op)
 
     def __set(self, tx: Transaction, op: Operation) -> None:
         pass

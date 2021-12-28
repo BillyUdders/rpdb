@@ -1,10 +1,10 @@
 import unittest
 
 from rpdb.db import DB
-from rpdb.operations import Operation, OperationType
+from rpdb.operations import Operation, OpType
 
 
-class MyTestCase(unittest.TestCase):
+class DBTestCase(unittest.TestCase):
     def test_set_get_unset_exists(self):
         db = DB()
 
@@ -21,16 +21,16 @@ class MyTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        self.assertEqual(len(db.state.tx_log), 1)
+        self.assertEqual(len(db.state.wal), 1)
 
-        most_recent_tx = db.state.tx_log[-1]
+        most_recent_tx = db.state.wal[-1]
         self.assertEqual(len(most_recent_tx), 3)
         self.assertEqual(
             most_recent_tx,
             [
-                Operation(OperationType.BEGIN, None, None),
-                Operation(OperationType.SET, "a", 12),
-                Operation(OperationType.COMMIT, None, None),
+                Operation(OpType.BEGIN, None, None),
+                Operation(OpType.SET, "a", 12),
+                Operation(OpType.COMMIT, None, None),
             ],
         )
 
@@ -47,11 +47,11 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(
             operation_captor,
             [
-                OperationType(OperationType.BEGIN, None, None),
-                OperationType(OperationType.SET, "a", 12),
-                OperationType(OperationType.SET, "b", 23),
-                OperationType(OperationType.UNSET, "b", None),
-                OperationType(OperationType.COMMIT, None, None),
+                Operation(OpType.BEGIN, None, None),
+                Operation(OpType.SET, "a", 12),
+                Operation(OpType.SET, "b", 23),
+                Operation(OpType.UNSET, "b", None),
+                Operation(OpType.COMMIT, None, None),
             ],
         )
         self.assertEqual(len(db.live_txs), 0)

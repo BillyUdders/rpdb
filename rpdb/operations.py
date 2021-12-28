@@ -15,10 +15,10 @@ class WriterOps(Enum):
     COMMIT = auto()
 
 
-OperationType = Union[ReaderOps, WriterOps]
+OpType = Union[ReaderOps, WriterOps]
 
 
 class Operation(NamedTuple):
-    operation_type: OperationType
+    op_type: OpType
     key: object
     value: Optional[object]
