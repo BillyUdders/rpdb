@@ -3,6 +3,10 @@ import uuid
 from enum import Enum, auto
 from typing import Any, Callable, Dict, NamedTuple, NewType, Optional
 
+from sortedcontainers import SortedDict as MemTable
+
+TransactionID = NewType("TransactionID", uuid.UUID)
+
 
 class OperationType(Enum):
     BEGIN = auto()
@@ -17,10 +21,7 @@ class OperationType(Enum):
 class Operation(NamedTuple):
     operation_type: OperationType
     key: object
-    value: object
-
-
-TransactionID = NewType("TransactionID", uuid.UUID)
+    value: Optional[object]
 
 
 class Transaction(list):
@@ -36,10 +37,8 @@ class Transaction(list):
         return f"Transaction(ops={self}, id={self.id})"
 
 
-class State(dict):
+class State:
     def __init__(self) -> None:
-        super().__init__()
-
         self.OPERATIONS: Dict[OperationType, Callable] = {
             OperationType.BEGIN: self.__begin,
             OperationType.SET: self.__set,
@@ -49,17 +48,14 @@ class State(dict):
             OperationType.COMMIT: self.__commit,
         }
 
+        self._memtable = MemTable()
+        self._sstables = MemTable(key=lambda x: str(x.path))
         self.wal: Dict[TransactionID, Operation] = {}
 
     def operate(self, tx: Transaction) -> Optional[Any]:
-        try:
-            for op in tx:
-                self.OPERATIONS[op.operation_type](tx.id, op)
-
-            return {"FIXME"}
-        except Exception as e:
-            print(e)
-            return None
+        for op in tx:
+            self.OPERATIONS[op.operation_type](tx.id, op)
+        return {"FIXME"}
 
     def __begin(self, tx_id: TransactionID, op: Operation) -> None:
         self.wal[tx_id] = op

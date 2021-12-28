@@ -1,6 +1,6 @@
 import unittest
 
-from main import Operation, OperationType, SimpleDB
+from rpdb.main import Operation, OperationType, SimpleDB
 
 
 class MyTestCase(unittest.TestCase):

@@ -1,11 +1,12 @@
 [tool.poetry]
-name = "python-db"
+name = "rpdb"
 version = "0.1.0"
 description = "Transactional KV store written in Python to learn things"
 authors = ["Rhys Davies <rhys.davies901@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+sortedcontainers = "^2.4.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.16.0"
