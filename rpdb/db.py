@@ -25,9 +25,12 @@ class State:
         self.wal: WAL = WAL("/tmp/wal.dat")
 
     def operate(self, tx: Transaction) -> Optional[Any]:
+        res = None
         for op in tx:
-            self.OPERATIONS[op.op_type](tx.id, op)
-        return {"FIXME"}
+            if val := self.OPERATIONS[op.op_type](tx.id, op):
+                res = val
+
+        return res
 
     def __begin(self, op: Operation) -> None:
         self.wal.append(op)

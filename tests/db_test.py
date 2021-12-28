@@ -21,12 +21,10 @@ class DBTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        self.assertEqual(len(db.state.wal), 1)
-
-        most_recent_tx = db.state.wal[-1]
-        self.assertEqual(len(most_recent_tx), 3)
+        wal = db.state.wal.restore_all()
+        self.assertEqual(len(wal), 1)
         self.assertEqual(
-            most_recent_tx,
+            wal,
             [
                 Operation(OpType.BEGIN, None, None),
                 Operation(OpType.SET, "a", 12),
@@ -34,7 +32,7 @@ class DBTestCase(unittest.TestCase):
             ],
         )
 
-    def test_tx_transaction_log(self):
+    def test_manual_transaction_operations(self):
         db = DB()
 
         with db.transaction():
@@ -42,7 +40,7 @@ class DBTestCase(unittest.TestCase):
             db.set("b", 23)
             db.unset("b")
             self.assertEqual(len(db.live_txs), 1)
-            operation_captor = db.live_txs[-1]
+            operation_captor = db.state.wal.restore_all()
 
         self.assertEqual(
             operation_captor,

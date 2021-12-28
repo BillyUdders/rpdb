@@ -1,7 +1,7 @@
 import json
 import time
 from struct import pack, unpack
-from typing import Iterator, Tuple
+from typing import Generator, Iterator, Tuple
 
 from rpdb.operations import Operation
 
@@ -23,12 +23,9 @@ class WAL:
         self.writer.write(value_bytes)
         self.writer.flush()
 
-    def restore_all(self):
+    def restore_all(self) -> Generator[Tuple[str, str], None, None]:
         self.writer.seek(0)
         yield from self._read_pairs()
-
-    def clear(self):
-        self.writer.truncate(0)
 
     def _read_pairs(self) -> Iterator[Tuple[str, str]]:
         while True:
@@ -40,6 +37,9 @@ class WAL:
             (value_len,) = unpack("I", self.writer.read(4))
             value_bytes = self.writer.read(value_len)
             yield key_bytes.decode("utf-8"), value_bytes.decode("utf-8")
+
+    def clear(self):
+        self.writer.truncate(0)
 
     @staticmethod
     def __create_key():
