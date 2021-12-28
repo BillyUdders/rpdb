@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message WALEntry {
+  enum OpType{
+    BEGIN = 0;
+    SET = 1;
+    UNSET = 2;
+    COMMIT = 3;
+  }
+
+  int32 timestamp = 1;
+  OpType op_type = 2;
+  string key = 3;
+  optional string value = 4;
+}
+
+message WAL {
+  repeated WALEntry entries = 1;
+}
