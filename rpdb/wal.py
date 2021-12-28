@@ -25,12 +25,12 @@ class WAL:
 
     def restore_all(self):
         self.writer.seek(0)
-        yield from self.read_pairs()
+        yield from self._read_pairs()
 
     def clear(self):
         self.writer.truncate(0)
 
-    def read_pairs(self) -> Iterator[Tuple[str, str]]:
+    def _read_pairs(self) -> Iterator[Tuple[str, str]]:
         while True:
             key_len_bytes = self.writer.read(len(self.__create_key()))
             if not key_len_bytes:
