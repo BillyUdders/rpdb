@@ -1,11 +1,12 @@
 import unittest
 
-from rpdb.main import Operation, OperationType, SimpleDB
+from rpdb.db import DB
+from rpdb.operations import Operation, OperationType
 
 
 class MyTestCase(unittest.TestCase):
     def test_set_get_unset_exists(self):
-        db = SimpleDB()
+        db = DB()
 
         db.set("a", 12)
         self.assertEqual(db.get("a"), 12)
@@ -16,7 +17,7 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(db.exists("a"))
 
     def test_auto_commit_operations(self):
-        db = SimpleDB()
+        db = DB()
 
         db.set("a", 12)
 
@@ -34,7 +35,7 @@ class MyTestCase(unittest.TestCase):
         )
 
     def test_tx_transaction_log(self):
-        db = SimpleDB()
+        db = DB()
 
         with db.transaction():
             db.set("a", 12)
@@ -46,17 +47,17 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(
             operation_captor,
             [
-                Operation(OperationType.BEGIN, None, None),
-                Operation(OperationType.SET, "a", 12),
-                Operation(OperationType.SET, "b", 23),
-                Operation(OperationType.UNSET, "b", None),
-                Operation(OperationType.COMMIT, None, None),
+                OperationType(OperationType.BEGIN, None, None),
+                OperationType(OperationType.SET, "a", 12),
+                OperationType(OperationType.SET, "b", 23),
+                OperationType(OperationType.UNSET, "b", None),
+                OperationType(OperationType.COMMIT, None, None),
             ],
         )
         self.assertEqual(len(db.live_txs), 0)
 
     def test_transaction_nesting(self):
-        db = SimpleDB()
+        db = DB()
         with db.transaction():
             with db.transaction():
                 self.assertEqual(len(db.live_txs), 2)
@@ -64,7 +65,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(db.live_txs), 0)
 
     def test_tx_set_rollback(self):
-        db = SimpleDB()
+        db = DB()
 
         db.set("a", 12)
         db.set("b", 23)

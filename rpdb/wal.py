@@ -1,0 +1,2 @@
+class WAL:
+    pass
