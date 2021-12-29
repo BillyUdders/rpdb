@@ -50,7 +50,8 @@ def create_write(e) -> Write:
 
 def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
-    entry.key = op.key
+    if op.key is not None:
+        entry.key = op.key
     if op.value is not None:
         entry.value = op.value
     entry.op_type = REVERSE_OP_DICT[op.op_type]

@@ -19,6 +19,8 @@ class DB:
         tx.do(WriterOps.BEGIN)
         yield tx
         tx.do(WriterOps.COMMIT)
+        for op in tx:
+            self.__write(op)
 
     def set(self, key, value):
         with self.transaction() as tx:
@@ -34,19 +36,21 @@ class DB:
     def exists(self, key):
         return self.__read(ReaderOps.EXISTS, key)
 
-    def __write(self, op: WriterOps, key: str, value: str = None):
-        self.wal.append(Write(op, key, value))
-        if op == WriterOps.COMMIT:
+    def __write(self, op: Write):
+        self.wal.append(op)
+        if op.op_type == WriterOps.COMMIT:
             self.__commit()
 
     def __commit(self):
         for wal_write in self.wal.read():
-            if wal_write == WriterOps.SET:
+            if wal_write.op_type == WriterOps.SET:
                 self._memtable[wal_write.key] = wal_write.value
-            elif wal_write == WriterOps.UNSET:
+            elif wal_write.op_type == WriterOps.UNSET:
                 del self._memtable[wal_write.key]
         self.wal.clear()
 
     def __read(self, op: ReaderOps, key: str):
-        # self._memtable
-        pass
+        if op == ReaderOps.GET:
+            return self._memtable[key]
+        elif op == ReaderOps.EXISTS:
+            return key in self._memtable
