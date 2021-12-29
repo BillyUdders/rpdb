@@ -3,6 +3,7 @@ syntax = "proto3";
 package rpdb;
 
 message WALEntry {
+  // mypy: ignore-errors
   enum OpType{
     BEGIN = 0;
     SET = 1;
@@ -11,10 +12,11 @@ message WALEntry {
     ROLLBACK = 4;
   }
 
-  int64 timestamp = 1;
-  OpType op_type = 2;
-  string key = 3;
-  optional string value = 4;
+  int64 crc32 = 1;
+  int64 timestamp = 2;
+  OpType op_type = 3;
+  string key = 4;
+  optional string value = 5;
 }
 
 message WAL {

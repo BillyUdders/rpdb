@@ -21,7 +21,7 @@ class DBTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        wal = list(db.wal.read_all())
+        wal = list(db.wal.read())
         self.assertEqual(len(wal), 1)
         self.assertEqual(
             wal,
@@ -40,7 +40,7 @@ class DBTestCase(unittest.TestCase):
             db.set("b", 23)
             db.unset("b")
             self.assertEqual(len(db.live_txs), 1)
-            operation_captor = db.wal.read_all()
+            operation_captor = list(db.wal.read())
 
         self.assertEqual(
             list(operation_captor),

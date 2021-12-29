@@ -1,4 +1,5 @@
 import time
+import zlib
 from typing import Iterator
 
 from proto.WAL_pb2 import WAL, WALEntry
@@ -28,28 +29,29 @@ class WriteAheadLog:
         self.writer.flush()
         self.store.Clear()
 
-    def read_all(self) -> Iterator[Write]:
+    def read(self) -> Iterator[Write]:
         self.writer.seek(0)
         self.store.ParseFromString(self.writer.read())
-        yield from write_transformer(self.store.entries)
+        for e in self.store.entries:
+            yield create_write(e)
 
     def clear(self):
         self.writer.truncate(0)
+        self.store.Clear()
 
     def close(self):
         self.writer.close()
 
 
-def write_transformer(entries) -> Iterator[Write]:
-    for e in entries:
-        val = e.value if e.HasField("value") else None
-        yield Write(OP_DICT[e.op_type], e.key, val)
+def create_write(e) -> Write:
+    val = e.value if e.HasField("value") else None
+    return Write(OP_DICT[e.op_type], e.key, val)
 
 
 def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
     entry.key = op.key
-    if op.value is None:
+    if op.value is not None:
         entry.value = op.value
     entry.op_type = REVERSE_OP_DICT[op.op_type]
-    print(entry)
+    entry.crc32 = zlib.crc32(entry.SerializeToString())

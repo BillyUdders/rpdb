@@ -9,7 +9,6 @@ from rpdb.wal import WriteAheadLog
 
 class DB:
     def __init__(self, write_ahead_log_file: str = "/tmp/wal.dat"):
-        self.live_txs: list[Transaction] = []
         self._memtable: SortedDict = SortedDict()
         self._sstables: SortedDict = SortedDict(key=lambda x: str(x.path))
         self.wal: WriteAheadLog = WriteAheadLog(write_ahead_log_file)
@@ -17,10 +16,9 @@ class DB:
     @contextlib.contextmanager
     def transaction(self):
         tx = Transaction()
-        self.live_txs.append(tx)
+        tx.do(WriterOps.BEGIN)
         yield tx
         tx.do(WriterOps.COMMIT)
-        self.live_txs.remove(tx)
 
     def set(self, key, value):
         self.__write(WriterOps.SET, key, value)
@@ -35,8 +33,7 @@ class DB:
         return self.__read(ReaderOps.EXISTS, key)
 
     def __write(self, op: WriterOps, key: str, value: object = None):
-        with self.transaction() as tx:
-            tx.do(op, key, value)
+        pass
 
     def __read(self, op: ReaderOps, key: str):
         # self._memtable
