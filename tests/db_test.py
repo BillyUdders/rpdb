@@ -8,8 +8,8 @@ class DBTestCase(unittest.TestCase):
     def test_set_get_unset_exists(self):
         db = DB()
 
-        db.set("a", 12)
-        self.assertEqual(db.get("a"), 12)
+        db.set("a", "12")
+        self.assertEqual(db.get("a"), "12")
         self.assertTrue(db.exists("a"))
 
         db.unset("a")
@@ -19,7 +19,7 @@ class DBTestCase(unittest.TestCase):
     def test_auto_commit_operations(self):
         db = DB()
 
-        db.set("a", 12)
+        db.set("a", "12")
 
         wal = list(db.wal.read())
         self.assertEqual(len(wal), 1)
