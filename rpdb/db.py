@@ -35,7 +35,8 @@ class DB:
         return self.__read(ReaderOps.EXISTS, key)
 
     def __write(self, op: WriterOps, key: str, value: object = None):
-        pass
+        with self.transaction() as tx:
+            tx.do(op, key, value)
 
     def __read(self, op: ReaderOps, key: str):
-        pass
+        self._memtable

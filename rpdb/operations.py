@@ -23,4 +23,4 @@ class Read(NamedTuple):
 class Write(NamedTuple):
     op_type: WriterOps
     key: str
-    value: Optional[object] = None
+    value: Optional[str] = None

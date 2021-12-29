@@ -20,7 +20,6 @@ class WriteAheadLog:
         self.store = WAL()
 
     def __del__(self):
-        self.clear()
         self.close()
 
     def append(self, op: Write):
@@ -49,5 +48,5 @@ def write_transformer(entries) -> Iterator[Write]:
 def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
     entry.key = op.key
-    entry.value = str(op.value)
+    entry.value = op.value
     entry.op_type = REVERSE_OP_DICT[op.op_type]
