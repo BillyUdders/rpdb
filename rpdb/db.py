@@ -39,4 +39,5 @@ class DB:
             tx.do(op, key, value)
 
     def __read(self, op: ReaderOps, key: str):
-        self._memtable
+        # self._memtable
+        pass

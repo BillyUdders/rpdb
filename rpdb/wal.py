@@ -42,11 +42,14 @@ class WriteAheadLog:
 
 def write_transformer(entries) -> Iterator[Write]:
     for e in entries:
-        yield Write(OP_DICT[e.op_type], e.key, e.value)
+        val = e.value if e.HasField("value") else None
+        yield Write(OP_DICT[e.op_type], e.key, val)
 
 
 def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
     entry.key = op.key
-    entry.value = op.value
+    if op.value is None:
+        entry.value = op.value
     entry.op_type = REVERSE_OP_DICT[op.op_type]
+    print(entry)
