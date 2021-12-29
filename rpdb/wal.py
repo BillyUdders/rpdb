@@ -2,15 +2,16 @@ import time
 from typing import Iterator
 
 from proto.WAL_pb2 import WAL, WALEntry
-from rpdb.operations import Operation, OpType
+from rpdb.operations import Write, WriterOps
 
 OP_DICT = {
-    WALEntry.OpType.BEGIN: OpType.BEGIN,  # type: ignore
-    WALEntry.OpType.SET: OpType.SET,  # type: ignore
-    WALEntry.OpType.UNSET: OpType.UNSET,  # type: ignore
-    WALEntry.OpType.COMMIT: OpType.COMMIT,  # type: ignore
-    WALEntry.OpType.ROLLBACK: OpType.ROLLBACK,  # type: ignore
+    WALEntry.OpType.BEGIN: WriterOps.BEGIN,  # type: ignore
+    WALEntry.OpType.SET: WriterOps.SET,  # type: ignore
+    WALEntry.OpType.UNSET: WriterOps.UNSET,  # type: ignore
+    WALEntry.OpType.COMMIT: WriterOps.COMMIT,  # type: ignore
+    WALEntry.OpType.ROLLBACK: WriterOps.ROLLBACK,  # type: ignore
 }
+REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
 
 
 class WriteAheadLog:
@@ -19,18 +20,19 @@ class WriteAheadLog:
         self.store = WAL()
 
     def __del__(self):
-        self.writer.close()
+        self.clear()
+        self.close()
 
-    def append(self, op: Operation):
-        create_entry(self.store.entries.add(), op)
+    def append(self, op: Write):
+        create_wal_entry(self.store.entries.add(), op)
         self.writer.write(self.store.SerializeToString())
         self.writer.flush()
         self.store.Clear()
 
-    def read_all(self) -> Iterator[Operation]:
+    def read_all(self) -> Iterator[Write]:
         self.writer.seek(0)
         self.store.ParseFromString(self.writer.read())
-        yield from create_operations(self.store.entries)
+        yield from write_transformer(self.store.entries)
 
     def clear(self):
         self.writer.truncate(0)
@@ -39,13 +41,13 @@ class WriteAheadLog:
         self.writer.close()
 
 
-def create_operations(entries) -> Iterator[Operation]:
+def write_transformer(entries) -> Iterator[Write]:
     for e in entries:
-        yield Operation(OP_DICT[e.op_type], e.key, e.value)
+        yield Write(OP_DICT[e.op_type], e.key, e.value)
 
 
-def create_entry(entry, op: Operation):
+def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
     entry.key = op.key
     entry.value = str(op.value)
-    entry.op_type = {v: k for k, v in OP_DICT.items()}[op.op_type]
+    entry.op_type = REVERSE_OP_DICT[op.op_type]

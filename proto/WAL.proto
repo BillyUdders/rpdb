@@ -14,7 +14,11 @@ message WALEntry {
   int64 timestamp = 1;
   OpType op_type = 2;
   string key = 3;
-  optional string value = 4;
+  oneof value{
+    string str_val = 4;
+    int32 int32_val = 5;
+
+  };
 }
 
 message WAL {

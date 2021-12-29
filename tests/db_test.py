@@ -1,7 +1,7 @@
 import unittest
 
 from rpdb.db import DB
-from rpdb.operations import Operation, OpType
+from rpdb.operations import Write, WriterOps
 
 
 class DBTestCase(unittest.TestCase):
@@ -21,14 +21,14 @@ class DBTestCase(unittest.TestCase):
 
         db.set("a", 12)
 
-        wal = db.state.wal.restore_all()
-        self.assertEqual(len(list(wal)), 1)
+        wal = list(db.wal.read_all())
+        self.assertEqual(len(wal), 1)
         self.assertEqual(
             wal,
             [
-                Operation(OpType.BEGIN, None, None),
-                Operation(OpType.SET, "a", 12),
-                Operation(OpType.COMMIT, None, None),
+                Write(WriterOps.BEGIN, None),
+                Write(WriterOps.SET, "a", 12),
+                Write(WriterOps.COMMIT, None),
             ],
         )
 
@@ -40,16 +40,16 @@ class DBTestCase(unittest.TestCase):
             db.set("b", 23)
             db.unset("b")
             self.assertEqual(len(db.live_txs), 1)
-            operation_captor = db.state.wal.restore_all()
+            operation_captor = db.wal.read_all()
 
         self.assertEqual(
-            operation_captor,
+            list(operation_captor),
             [
-                Operation(OpType.BEGIN, None, None),
-                Operation(OpType.SET, "a", 12),
-                Operation(OpType.SET, "b", 23),
-                Operation(OpType.UNSET, "b", None),
-                Operation(OpType.COMMIT, None, None),
+                Write(WriterOps.BEGIN, None),
+                Write(WriterOps.SET, "a", 12),
+                Write(WriterOps.SET, "b", 23),
+                Write(WriterOps.UNSET, "b"),
+                Write(WriterOps.COMMIT, None),
             ],
         )
         self.assertEqual(len(db.live_txs), 0)

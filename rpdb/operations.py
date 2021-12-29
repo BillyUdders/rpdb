@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional
 
 
 class ReaderOps(Enum):
@@ -15,10 +15,12 @@ class WriterOps(Enum):
     COMMIT = auto()
 
 
-OpType = Union[ReaderOps, WriterOps]
-
-
-class Operation(NamedTuple):
-    op_type: OpType
+class Read(NamedTuple):
+    op_type: ReaderOps
     key: str
-    value: Optional[object]
+
+
+class Write(NamedTuple):
+    op_type: WriterOps
+    key: str
+    value: Optional[object] = None
