@@ -12,13 +12,11 @@ from google.protobuf import symbol_database as _symbol_database
 
 _sym_db = _symbol_database.Default()
 
-# mypy: ignore-errors
-
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
     b'\n\tWAL.proto\x12\x04rpdb"\xc2\x01\n\x08WALEntry\x12\r\n\x05\x63rc32\x18\x01 \x01(\x03\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12&\n\x07op_type\x18\x03 \x01(\x0e\x32\x15.rpdb.WALEntry.OpType\x12\x0b\n\x03key\x18\x04 \x01(\t\x12\x12\n\x05value\x18\x05 \x01(\tH\x00\x88\x01\x01"A\n\x06OpType\x12\t\n\x05\x42\x45GIN\x10\x00\x12\x07\n\x03SET\x10\x01\x12\t\n\x05UNSET\x10\x02\x12\n\n\x06\x43OMMIT\x10\x03\x12\x0c\n\x08ROLLBACK\x10\x04\x42\x08\n\x06_value"&\n\x03WAL\x12\x1f\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x0e.rpdb.WALEntryb\x06proto3'
 )
-
+# mypy: ignore-errors
 
 _WALENTRY = DESCRIPTOR.message_types_by_name["WALEntry"]
 _WAL = DESCRIPTOR.message_types_by_name["WAL"]

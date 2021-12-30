@@ -43,11 +43,7 @@ class WriteAheadLog:
         self.writer.close()
 
 
-def create_write(e) -> Write:
-    val = e.value if e.HasField("value") else None
-    return Write(OP_DICT[e.op_type], e.key, val)
-
-
+# Serialize
 def create_wal_entry(entry, op: Write):
     entry.timestamp = time.time_ns()
     if op.key is not None:
@@ -56,3 +52,9 @@ def create_wal_entry(entry, op: Write):
         entry.value = op.value
     entry.op_type = REVERSE_OP_DICT[op.op_type]
     entry.crc32 = zlib.crc32(entry.SerializeToString())
+
+
+# Deserialize
+def create_write(e) -> Write:
+    val = e.value if e.HasField("value") else None
+    return Write(OP_DICT[e.op_type], e.key, val)

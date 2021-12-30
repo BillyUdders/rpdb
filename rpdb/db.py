@@ -19,7 +19,7 @@ class DB:
         tx.do(WriterOps.BEGIN)
         yield tx
         tx.do(WriterOps.COMMIT)
-        for op in tx:
+        for op in tx.operations:
             self.__write(op)
 
     def set(self, key, value):
@@ -47,7 +47,7 @@ class DB:
                 self._memtable[wal_write.key] = wal_write.value
             elif wal_write.op_type == WriterOps.UNSET:
                 del self._memtable[wal_write.key]
-        self.wal.clear()
+        # self.wal.clear()
 
     def __read(self, op: ReaderOps, key: str):
         if op == ReaderOps.GET:

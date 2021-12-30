@@ -1,5 +1,7 @@
 from enum import Enum, auto
-from typing import NamedTuple, Optional
+from typing import Optional
+
+from attrs import define
 
 
 class ReaderOps(Enum):
@@ -15,12 +17,14 @@ class WriterOps(Enum):
     COMMIT = auto()
 
 
-class Read(NamedTuple):
+@define
+class Read:
     op_type: ReaderOps
     key: str
 
 
-class Write(NamedTuple):
+@define
+class Write:
     op_type: WriterOps
-    key: str
+    key: Optional[str] = None
     value: Optional[str] = None
