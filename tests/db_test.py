@@ -7,7 +7,6 @@ from rpdb.operations import Write, WriterOps
 class DBTestCase(unittest.TestCase):
     def test_set_get_unset_exists(self):
         db = DB()
-        db.wal.clear()
 
         db.set("a", "12")
         self.assertEqual(db.get("a"), "12")

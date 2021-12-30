@@ -47,7 +47,7 @@ class DB:
                 self._memtable[wal_write.key] = wal_write.value
             elif wal_write.op_type == WriterOps.UNSET:
                 del self._memtable[wal_write.key]
-        # self.wal.clear()
+        self.wal.clear()
 
     def __read(self, op: ReaderOps, key: str):
         if op == ReaderOps.GET:
