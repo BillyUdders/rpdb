@@ -21,14 +21,14 @@ class WriteAheadLog(Collection):
         self.writer = open(wal_file_location, "+ab")
         self.store = WAL()
 
-    def __len__(self) -> int:
-        pass
-
     def __iter__(self) -> Iterator[Write]:
         self.writer.seek(0)
         self.store.ParseFromString(self.writer.read())
         for e in self.store.entries:
             yield create_write(e)
+
+    def __len__(self) -> int:
+        pass
 
     def __contains__(self, __x: object) -> bool:
         pass

@@ -10,7 +10,6 @@ TransactionID = NewType("TransactionID", uuid.UUID)
 
 @define
 class Transaction:
-    id: TransactionID = TransactionID(uuid.uuid4())
     operations: List[Write] = []
 
     def do(self, op_type: WriterOps, key=None, value=None):

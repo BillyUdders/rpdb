@@ -21,6 +21,7 @@ class DB:
         tx.do(WriterOps.COMMIT)
         for op in tx.operations:
             self.__write(op)
+        self.tx_log.append(tx)
 
     def set(self, key, value):
         with self.transaction() as tx:
