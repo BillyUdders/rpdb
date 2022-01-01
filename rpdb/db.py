@@ -1,17 +1,17 @@
 import contextlib
+from typing import List
 
-from sortedcontainers import SortedDict
-
-from rpdb.operations import ReaderOps, Write, WriterOps
+from rpdb.operations import Write, WriterOps
+from rpdb.storage import Storage
 from rpdb.transaction import Transaction
 from rpdb.wal import WriteAheadLog
 
 
 class DB:
     def __init__(self, write_ahead_log_file: str = "/tmp/wal.dat"):
-        self._memtable: SortedDict = SortedDict()
-        self._sstables: SortedDict = SortedDict(key=lambda x: str(x.path))
         self.wal: WriteAheadLog = WriteAheadLog(write_ahead_log_file)
+        self.storage: Storage = Storage()
+        self.tx_log: List[Transaction] = []
 
     @contextlib.contextmanager
     def transaction(self):
@@ -31,10 +31,10 @@ class DB:
             tx.do(WriterOps.UNSET, key)
 
     def get(self, key):
-        return self.__read(ReaderOps.GET, key)
+        return self.storage[key]
 
     def exists(self, key):
-        return self.__read(ReaderOps.EXISTS, key)
+        return key in self.storage
 
     def __write(self, op: Write):
         self.wal.append(op)
@@ -42,15 +42,9 @@ class DB:
             self.__commit()
 
     def __commit(self):
-        for wal_write in self.wal.read():
-            if wal_write.op_type == WriterOps.SET:
-                self._memtable[wal_write.key] = wal_write.value
-            elif wal_write.op_type == WriterOps.UNSET:
-                del self._memtable[wal_write.key]
+        for write in self.wal:
+            if write.op_type == WriterOps.SET:
+                self.storage[write.key] = write.value
+            elif write.op_type == WriterOps.UNSET:
+                del self.storage[write.key]
         self.wal.clear()
-
-    def __read(self, op: ReaderOps, key: str):
-        if op == ReaderOps.GET:
-            return self._memtable[key]
-        elif op == ReaderOps.EXISTS:
-            return key in self._memtable

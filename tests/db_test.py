@@ -21,7 +21,7 @@ class DBTestCase(unittest.TestCase):
 
         db.set("a", "12")
 
-        wal = list(db.wal.read())
+        wal = list(db.wal)
         self.assertEqual(
             wal,
             [
@@ -35,11 +35,10 @@ class DBTestCase(unittest.TestCase):
         db = DB()
 
         with db.transaction():
-            db.set("a", 12)
-            db.set("b", 23)
+            db.set("a", "12")
+            db.set("b", "23")
             db.unset("b")
-            self.assertEqual(len(db.live_txs), 1)
-            operation_captor = list(db.wal.read())
+            operation_captor = list(db.wal)
 
         self.assertEqual(
             list(operation_captor),
@@ -51,32 +50,23 @@ class DBTestCase(unittest.TestCase):
                 Write(WriterOps.COMMIT, None),
             ],
         )
-        self.assertEqual(len(db.live_txs), 0)
-
-    def test_transaction_nesting(self):
-        db = DB()
-        with db.transaction():
-            with db.transaction():
-                self.assertEqual(len(db.live_txs), 2)
-            self.assertEqual(len(db.live_txs), 1)
-        self.assertEqual(len(db.live_txs), 0)
 
     def test_tx_set_rollback(self):
         db = DB()
 
-        db.set("a", 12)
-        db.set("b", 23)
-        self.assertEqual(db.get("a"), 12)
-        self.assertEqual(db.get("b"), 23)
+        db.set("a", "12")
+        db.set("b", "23")
+        self.assertEqual(db.get("a"), "12")
+        self.assertEqual(db.get("b"), "23")
 
         with db.transaction():
-            db.set("a", 49)
+            db.set("a", "49")
             db.unset("b")
-            self.assertEqual(db.get("a"), 49)
+            self.assertEqual(db.get("a"), "49")
             self.assertFalse(db.exists("b"))
 
-        self.assertEqual(db.get("a"), 49)
-        self.assertEqual(db.get("b"), 23)
+        self.assertEqual(db.get("a"), "49")
+        self.assertEqual(db.get("b"), "23")
 
 
 if __name__ == "__main__":

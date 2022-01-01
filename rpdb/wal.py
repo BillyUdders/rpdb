@@ -1,5 +1,6 @@
 import time
 import zlib
+from collections.abc import Collection
 from typing import Iterator
 
 from proto.WAL_pb2 import WAL, WALEntry
@@ -15,10 +16,22 @@ OP_DICT = {
 REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
 
 
-class WriteAheadLog:
+class WriteAheadLog(Collection):
     def __init__(self, wal_file_location: str) -> None:
         self.writer = open(wal_file_location, "+ab")
         self.store = WAL()
+
+    def __len__(self) -> int:
+        pass
+
+    def __iter__(self) -> Iterator[Write]:
+        self.writer.seek(0)
+        self.store.ParseFromString(self.writer.read())
+        for e in self.store.entries:
+            yield create_write(e)
+
+    def __contains__(self, __x: object) -> bool:
+        pass
 
     def __del__(self):
         self.close()
@@ -28,12 +41,6 @@ class WriteAheadLog:
         self.writer.write(self.store.SerializeToString())
         self.writer.flush()
         self.store.Clear()
-
-    def read(self) -> Iterator[Write]:
-        self.writer.seek(0)
-        self.store.ParseFromString(self.writer.read())
-        for e in self.store.entries:
-            yield create_write(e)
 
     def clear(self):
         self.writer.truncate(0)
