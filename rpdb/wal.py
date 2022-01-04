@@ -1,67 +1,78 @@
+import contextlib
+import io
 import time
 import zlib
 from collections.abc import Collection
 from typing import Iterator
 
-from proto.WAL_pb2 import WAL, WALEntry
+from proto.rpdb import WAL, WALEntry, WALEntryOpType
 from rpdb.operations import Write, WriterOps
 
 OP_DICT = {
-    WALEntry.OpType.BEGIN: WriterOps.BEGIN,  # type: ignore
-    WALEntry.OpType.SET: WriterOps.SET,  # type: ignore
-    WALEntry.OpType.UNSET: WriterOps.UNSET,  # type: ignore
-    WALEntry.OpType.COMMIT: WriterOps.COMMIT,  # type: ignore
-    WALEntry.OpType.ROLLBACK: WriterOps.ROLLBACK,  # type: ignore
+    WALEntryOpType.BEGIN: WriterOps.BEGIN,  # type: ignore
+    WALEntryOpType.SET: WriterOps.SET,  # type: ignore
+    WALEntryOpType.UNSET: WriterOps.UNSET,  # type: ignore
+    WALEntryOpType.COMMIT: WriterOps.COMMIT,  # type: ignore
+    WALEntryOpType.ROLLBACK: WriterOps.ROLLBACK,  # type: ignore
 }
 REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
 
 
 class WriteAheadLog(Collection):
     def __init__(self, wal_file_location: str) -> None:
+        self.wal_file_location = wal_file_location
         self.writer = open(wal_file_location, "+ab")
-        self.store = WAL()
+
+    @contextlib.contextmanager
+    def get_entries(self):
+        wal = WAL()
+        self.writer.seek(0)
+        yield wal.parse(self.writer.read()).entries
+        self.writer.seek(0, io.SEEK_END)
 
     def __iter__(self) -> Iterator[Write]:
-        self.writer.seek(0)
-        self.store.ParseFromString(self.writer.read())
-        for e in self.store.entries:
-            yield create_write(e)
+        with self.get_entries() as entries:
+            for e in entries:
+                yield create_write(e)
 
     def __len__(self) -> int:
-        pass
+        with self.get_entries() as entries:
+            return len(entries)
 
     def __contains__(self, __x: object) -> bool:
-        pass
+        if isinstance(__x, Write):
+            with self.get_entries() as entries:
+                return __x in map(create_write, entries)
+        return False
 
     def __del__(self):
         self.close()
 
     def append(self, op: Write):
-        create_wal_entry(self.store.entries.add(), op)
-        self.writer.write(self.store.SerializeToString())
+        wal = WAL()
+        wal.entries.append(create_wal_entry(op))
+        self.writer.write(bytes(wal))
         self.writer.flush()
-        self.store.Clear()
 
     def clear(self):
         self.writer.truncate(0)
-        self.store.Clear()
 
     def close(self):
         self.writer.close()
 
 
 # Serialize
-def create_wal_entry(entry, op: Write):
-    entry.timestamp = time.time_ns()
-    if op.key is not None:
-        entry.key = op.key
-    if op.value is not None:
-        entry.value = op.value
-    entry.op_type = REVERSE_OP_DICT[op.op_type]
-    entry.crc32 = zlib.crc32(entry.SerializeToString())
+def create_wal_entry(op: Write) -> WALEntry:
+    entry = WALEntry(
+        timestamp=time.time_ns(),
+        op_type=REVERSE_OP_DICT[op.op_type],
+        key=op.key or "",
+        value=op.value or "",
+    )
+    entry.crc32 = zlib.crc32(bytes(entry))
+    return entry
 
 
 # Deserialize
-def create_write(e) -> Write:
-    val = e.value if e.HasField("value") else None
-    return Write(OP_DICT[e.op_type], e.key, val)
+def create_write(e: WALEntry) -> Write:
+    return Write(OP_DICT[e.op_type], e.key, e.value)

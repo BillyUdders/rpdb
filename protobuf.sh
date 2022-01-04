@@ -1,1 +1,1 @@
-protoc -I=proto --python_out=proto proto/WAL.proto
+protoc -I=proto --python_betterproto_out=proto proto/WAL.proto
