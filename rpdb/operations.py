@@ -27,4 +27,4 @@ class Read:
 class Write:
     op_type: WriterOps
     key: Optional[str] = None
-    value: Optional[str] = None
+    value: Optional[str] = ""

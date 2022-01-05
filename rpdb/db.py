@@ -1,4 +1,4 @@
-import contextlib
+from contextlib import contextmanager
 from typing import List
 
 from rpdb.operations import Write, WriterOps
@@ -13,7 +13,7 @@ class DB:
         self.storage: Storage = Storage()
         self.tx_log: List[Transaction] = []
 
-    @contextlib.contextmanager
+    @contextmanager
     def transaction(self):
         tx = Transaction()
         tx.do(WriterOps.BEGIN)

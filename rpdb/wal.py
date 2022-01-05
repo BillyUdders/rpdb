@@ -1,8 +1,8 @@
-import contextlib
 import io
 import time
 import zlib
 from collections.abc import Collection
+from contextlib import contextmanager
 from typing import Iterator
 
 from proto.rpdb import WAL, WALEntry, WALEntryOpType
@@ -23,26 +23,25 @@ class WriteAheadLog(Collection):
         self.wal_file_location = wal_file_location
         self.writer = open(wal_file_location, "+ab")
 
-    @contextlib.contextmanager
-    def get_entries(self):
+    @contextmanager
+    def get_entries(self) -> Iterator[map]:
         wal = WAL()
         self.writer.seek(0)
-        yield wal.parse(self.writer.read()).entries
+        yield map(create_write, wal.parse(self.writer.read()).entries)
         self.writer.seek(0, io.SEEK_END)
 
     def __iter__(self) -> Iterator[Write]:
         with self.get_entries() as entries:
-            for e in entries:
-                yield create_write(e)
+            return entries
 
     def __len__(self) -> int:
         with self.get_entries() as entries:
-            return len(entries)
+            return len(list(entries))
 
     def __contains__(self, __x: object) -> bool:
         if isinstance(__x, Write):
             with self.get_entries() as entries:
-                return __x in map(create_write, entries)
+                return __x in entries
         return False
 
     def __del__(self):

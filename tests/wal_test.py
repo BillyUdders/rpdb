@@ -23,12 +23,14 @@ class WALTestCase(unittest.TestCase):
     def test_contains(self):
         _a = Write(WriterOps.SET, "a", "23")
         _b = Write(WriterOps.SET, "b", "49")
+        _c = Write(WriterOps.SET, "c", "FUCK")
 
         self.wal.append(_a)
         self.wal.append(_b)
 
         self.assertTrue(_a in self.wal)
         self.assertTrue(_b in self.wal)
+        self.assertTrue(_c not in self.wal)
         self.assertTrue(23 not in self.wal)
         self.assertTrue("your mom" not in self.wal)
 
@@ -47,11 +49,11 @@ class WALTestCase(unittest.TestCase):
         self.wal.close()
         self.assertTrue(self.wal.writer.closed)
 
-        # New WAL file so empty log
+        # New WAL file, should be empty log
         self.wal = WriteAheadLog("/tmp/blah.dat")
         self.assertEqual([], list(self.wal))
 
-        # Re-init the full WAL and read it back
+        # Re-init the WAL with stuff in and read it back
         self.wal = WriteAheadLog(WAL_FILE_LOCATION)
         self.assertFalse(self.wal.writer.closed)
         self.assertEqual([op, op2, op3, op4], list(self.wal))
@@ -66,8 +68,8 @@ class WALTestCase(unittest.TestCase):
         self.assertEqual([op, op2, op3, op4, op, op2, op3, op4], list(self.wal))
 
     def test_none_value(self):
-        op = Write(WriterOps.SET, "a", None)
-        # op2 = Write(WriterOps.SET, "a", "") Fails
-        self.wal.append(op)
+        op2 = Write(WriterOps.SET, "a", "")
 
-        self.assertEqual(list(self.wal), [op])
+        self.wal.append(op2)
+
+        self.assertEqual(list(self.wal), [op2])
