@@ -1,4 +1,3 @@
-import io
 import time
 import zlib
 from collections.abc import Collection
@@ -21,14 +20,13 @@ REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
 class WriteAheadLog(Collection):
     def __init__(self, wal_file_location: str) -> None:
         self.wal_file_location = wal_file_location
-        self.writer = open(wal_file_location, "+ab")
+        self.writer = open(wal_file_location, "ab")
 
     @contextmanager
     def get_entries(self) -> Iterator[map]:
-        wal = WAL()
-        self.writer.seek(0)
-        yield map(create_write, wal.parse(self.writer.read()).entries)
-        self.writer.seek(0, io.SEEK_END)
+        with open(self.wal_file_location, "rb") as replay:
+            wal = WAL()
+            yield map(create_write, wal.parse(replay.read()).entries)
 
     def __iter__(self) -> Iterator[Write]:
         with self.get_entries() as entries:

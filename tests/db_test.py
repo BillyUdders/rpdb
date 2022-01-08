@@ -10,19 +10,18 @@ class DBTestCase(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.db.wal.clear()
-        self.db.storage.clear()
 
     def test_set_get_unset_exists(self):
-        self.db.set("a", "12")
+        self.db["a"] = "12"
         self.assertEqual(self.db.get("a"), "12")
         self.assertTrue(self.db.exists("a"))
 
-        self.db.unset("a")
-        self.assertRaises(KeyError, self.db.get, "a")
+        del self.db["a"]
+        self.assertRaises(KeyError, self.db.__getitem__, "a")
         self.assertFalse(self.db.exists("a"))
 
     def test_auto_commit_operations(self):
-        self.db.set("a", "12")
+        self.db["a"] = "12"
 
         self.assertEqual(
             self.__get_last_ops(),
@@ -35,9 +34,9 @@ class DBTestCase(unittest.TestCase):
 
     def test_manual_transaction_operations(self):
         with self.db.transaction():
-            self.db.set("a", "12")
-            self.db.set("b", "23")
-            self.db.unset("b")
+            self.db["a"] = "12"
+            self.db["b"] = "23"
+            del self.db["b"]
 
         self.assertEqual(
             self.__get_last_ops(),
@@ -51,14 +50,14 @@ class DBTestCase(unittest.TestCase):
         )
 
     def test_tx_set_rollback(self):
-        self.db.set("a", "12")
-        self.db.set("b", "23")
+        self.db["a"] = "12"
+        self.db["b"] = "23"
         self.assertEqual(self.db.get("a"), "12")
         self.assertEqual(self.db.get("b"), "23")
 
         with self.db.transaction():
-            self.db.set("a", "49")
-            self.db.unset("b")
+            self.db["a"] = "49"
+            del self.db["b"]
             self.assertEqual(self.db.get("a"), "49")
             self.assertFalse(self.db.exists("b"))
 
