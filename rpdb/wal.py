@@ -8,11 +8,11 @@ from proto.rpdb import WAL, WALEntry, WALEntryOpType
 from rpdb.operations import Write, WriterOps
 
 OP_DICT = {
-    WALEntryOpType.BEGIN: WriterOps.BEGIN,  # type: ignore
-    WALEntryOpType.SET: WriterOps.SET,  # type: ignore
-    WALEntryOpType.UNSET: WriterOps.UNSET,  # type: ignore
-    WALEntryOpType.COMMIT: WriterOps.COMMIT,  # type: ignore
-    WALEntryOpType.ROLLBACK: WriterOps.ROLLBACK,  # type: ignore
+    WALEntryOpType.BEGIN: WriterOps.BEGIN,
+    WALEntryOpType.SET: WriterOps.SET,
+    WALEntryOpType.UNSET: WriterOps.UNSET,
+    WALEntryOpType.COMMIT: WriterOps.COMMIT,
+    WALEntryOpType.ROLLBACK: WriterOps.ROLLBACK,
 }
 REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
 
