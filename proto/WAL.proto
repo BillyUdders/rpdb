@@ -19,5 +19,5 @@ message WALEntry {
 }
 
 message WAL {
-  repeated WALEntry entries = 1 [packed = true];
+  repeated WALEntry entries = 1;
 }

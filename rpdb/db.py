@@ -11,16 +11,19 @@ from rpdb.wal import WriteAheadLog
 
 class DB(MutableMapping):
     def __init__(
-        self, write_ahead_log_file: str = "/tmp/wal.dat", memtable_items_limit=512
+        self,
+        write_ahead_log_file: str = "/tmp/wal.dat",
+        memtable_max_size: int = 512,
     ):
-        self.memtable_items_limit = memtable_items_limit
         self.wal: WriteAheadLog = WriteAheadLog(write_ahead_log_file)
+        self.memtable_max_size: int = memtable_max_size
         self._memtable: SortedDict = SortedDict()
         self._sstables: SortedDict = SortedDict(key=lambda x: str(x.path))
         self.tx_log: List[Transaction] = []
 
     @contextmanager
     def transaction(self):
+        # FIXME
         tx = Transaction()
         tx.do(WriterOps.BEGIN)
         yield tx
@@ -29,19 +32,18 @@ class DB(MutableMapping):
             self.__write(op)
         self.tx_log.append(tx)
 
+    def __len__(self) -> int:
+        # FIXME
+        return -1
+
     def __getitem__(self, k):
         return self._memtable[k]
 
     def __setitem__(self, k, v) -> None:
-        with self.transaction() as tx:
-            tx.do(WriterOps.SET, k, v)
+        self.__write(Write(WriterOps.SET, k, v))
 
     def __delitem__(self, v) -> None:
-        with self.transaction() as tx:
-            tx.do(WriterOps.UNSET, v)
-
-    def __len__(self) -> int:
-        return len(self._memtable)
+        self.__write(Write(WriterOps.UNSET, v))
 
     def __iter__(self) -> Iterator:
         return iter(self._memtable)
@@ -60,7 +62,8 @@ class DB(MutableMapping):
             self._dump_memtable_to_sstable()
 
     def _memtable_limit_reached(self):
-        return len(self) >= self.memtable_items_limit
+        return len(self._memtable) >= self.memtable_max_size
 
     def _dump_memtable_to_sstable(self):
+        self.wal.clear()
         self._memtable = SortedDict()
