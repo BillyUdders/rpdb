@@ -4,8 +4,7 @@ from typing import Iterator, List
 
 from sortedcontainers import SortedDict
 
-from rpdb.operations import Write, WriterOps
-from rpdb.transaction import Transaction
+from rpdb.types import Transaction, Write, WriterOps
 from rpdb.wal import WriteAheadLog
 
 

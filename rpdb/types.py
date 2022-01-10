@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Optional
+from typing import List, Optional
 
 from attrs import define
 
@@ -28,3 +28,11 @@ class Write:
     op_type: WriterOps
     key: Optional[str] = None
     value: Optional[str] = ""
+
+
+@define
+class Transaction:
+    operations: List[Write] = []
+
+    def do(self, op_type: WriterOps, key=None, value=None):
+        self.operations.append(Write(op_type, key, value))

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 from proto.rpdb import WAL, WALEntry, WALEntryOpType
-from rpdb.operations import Write, WriterOps
+from rpdb.types import Write, WriterOps
 
 OP_DICT = {
     WALEntryOpType.BEGIN: WriterOps.BEGIN,
