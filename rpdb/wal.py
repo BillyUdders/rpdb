@@ -29,7 +29,7 @@ class WriteAheadLog(Collection):
 
     def append(self, op: Write):
         wal = WAL()
-        wal.entries.append(op.to_wal_entry())
+        wal.entries.append(Write.to_wal_entry(op))
         self.writer.write(bytes(wal))
         self.writer.flush()
 

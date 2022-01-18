@@ -44,13 +44,14 @@ class Write:
     value: Optional[str] = ""
 
     # Serialize
-    def to_wal_entry(self) -> WALEntry:
+    @staticmethod
+    def to_wal_entry(e: "Write") -> WALEntry:
         entry = WALEntry(
             timestamp=time.time_ns(),
-            op_type=REVERSE_OP_DICT[self.op_type],
-            key=self.key or "",
+            op_type=REVERSE_OP_DICT[e.op_type],
+            key=e.key or "",
         )
-        entry.value = self.value or ""
+        entry.value = e.value or ""
         entry.crc32 = zlib.crc32(bytes(entry))
         return entry
 
