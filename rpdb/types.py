@@ -1,7 +1,11 @@
+import time
+import zlib
 from enum import Enum, auto
 from typing import List, Optional
 
 from attrs import define
+
+from proto.rpdb import WALEntry, WALEntryOpType
 
 
 class ReaderOps(Enum):
@@ -17,6 +21,16 @@ class WriterOps(Enum):
     COMMIT = auto()
 
 
+OP_DICT = {
+    WALEntryOpType.BEGIN: WriterOps.BEGIN,
+    WALEntryOpType.SET: WriterOps.SET,
+    WALEntryOpType.UNSET: WriterOps.UNSET,
+    WALEntryOpType.COMMIT: WriterOps.COMMIT,
+    WALEntryOpType.ROLLBACK: WriterOps.ROLLBACK,
+}
+REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
+
+
 @define
 class Read:
     op_type: ReaderOps
@@ -28,6 +42,22 @@ class Write:
     op_type: WriterOps
     key: Optional[str] = None
     value: Optional[str] = ""
+
+    # Serialize
+    def to_wal_entry(self) -> WALEntry:
+        entry = WALEntry(
+            timestamp=time.time_ns(),
+            op_type=REVERSE_OP_DICT[self.op_type],
+            key=self.key or "",
+        )
+        entry.value = self.value or ""
+        entry.crc32 = zlib.crc32(bytes(entry))
+        return entry
+
+    # Deserialize
+    @staticmethod
+    def from_wal_entry(e: WALEntry) -> "Write":
+        return Write(OP_DICT[e.op_type], e.key, e.value)
 
 
 @define

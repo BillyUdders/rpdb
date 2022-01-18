@@ -1,20 +1,8 @@
-import time
-import zlib
 from collections.abc import Collection
-from contextlib import contextmanager
 from typing import Iterator
 
-from proto.rpdb import WAL, WALEntry, WALEntryOpType
-from rpdb.types import Write, WriterOps
-
-OP_DICT = {
-    WALEntryOpType.BEGIN: WriterOps.BEGIN,
-    WALEntryOpType.SET: WriterOps.SET,
-    WALEntryOpType.UNSET: WriterOps.UNSET,
-    WALEntryOpType.COMMIT: WriterOps.COMMIT,
-    WALEntryOpType.ROLLBACK: WriterOps.ROLLBACK,
-}
-REVERSE_OP_DICT = {v: k for k, v in OP_DICT.items()}
+from proto.rpdb import WAL
+from rpdb.types import Write
 
 
 class WriteAheadLog(Collection):
@@ -22,24 +10,18 @@ class WriteAheadLog(Collection):
         self.wal_file_location = wal_file_location
         self.writer = open(wal_file_location, "ab")
 
-    @contextmanager
-    def get_entries(self) -> Iterator[map]:
+    def __iter__(self) -> Iterator[Write]:
         with open(self.wal_file_location, "rb") as replay:
             wal = WAL()
-            yield map(create_write, wal.parse(replay.read()).entries)
-
-    def __iter__(self) -> Iterator[Write]:
-        with self.get_entries() as entries:
-            return entries
+            for i in wal.parse(replay.read()).entries:
+                yield Write.from_wal_entry(i)
 
     def __len__(self) -> int:
-        with self.get_entries() as entries:
-            return len(list(entries))
+        return len(list(iter(self)))
 
     def __contains__(self, __x: object) -> bool:
         if isinstance(__x, Write):
-            with self.get_entries() as entries:
-                return __x in entries
+            return __x in iter(self)
         return False
 
     def __del__(self):
@@ -47,7 +29,7 @@ class WriteAheadLog(Collection):
 
     def append(self, op: Write):
         wal = WAL()
-        wal.entries.append(create_wal_entry(op))
+        wal.entries.append(op.to_wal_entry())
         self.writer.write(bytes(wal))
         self.writer.flush()
 
@@ -56,20 +38,3 @@ class WriteAheadLog(Collection):
 
     def close(self):
         self.writer.close()
-
-
-# Serialize
-def create_wal_entry(op: Write) -> WALEntry:
-    entry = WALEntry(
-        timestamp=time.time_ns(),
-        op_type=REVERSE_OP_DICT[op.op_type],
-        key=op.key or "",
-        value=op.value or "",
-    )
-    entry.crc32 = zlib.crc32(bytes(entry))
-    return entry
-
-
-# Deserialize
-def create_write(e: WALEntry) -> Write:
-    return Write(OP_DICT[e.op_type], e.key, e.value)

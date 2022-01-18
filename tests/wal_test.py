@@ -1,6 +1,6 @@
 import unittest
 
-from rpdb.operations import Write, WriterOps
+from rpdb.types import Write, WriterOps
 from rpdb.wal import WriteAheadLog
 
 WAL_FILE_LOCATION = "/tmp/wal.dat"
